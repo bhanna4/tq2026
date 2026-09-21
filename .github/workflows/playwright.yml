@@ -27,6 +27,8 @@ jobs:
         run: npx playwright test
         env:
           GOREST_TOKEN: ${{ secrets.GOREST_TOKEN }}
+          BEARSTORE_USERNAME: ${{ vars.BEARSTORE_USERNAME }}
+          BEARSTORE_PASSWORD: ${{ vars.BEARSTORE_PASSWORD }}
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
