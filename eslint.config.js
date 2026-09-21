@@ -32,7 +32,7 @@ module.exports = tseslint.config(
     },
   },
   {
-    files: ['tests/**/*.ts'],
+    files: ['tests/ui/**/*.ts'],
     rules: {
       'no-restricted-syntax': ['error', NO_ABSOLUTE_XPATH, NO_RAW_LOCATORS_IN_TESTS],
     },

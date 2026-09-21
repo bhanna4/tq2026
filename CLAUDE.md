@@ -5,8 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 - Run all tests: `npx playwright test`
-- Run a single test file: `npx playwright test tests/example.spec.ts`
+- Run a single test file: `npx playwright test tests/ui/search.spec.ts`
 - Run a single test by name: `npx playwright test -g "has title"`
+- Run only the UI tests (all browser projects): `npx playwright test --project=chromium --project=firefox --project=webkit`
 - Run tests in a specific browser project: `npx playwright test --project=chromium`
 - Run only the API tests: `npx playwright test --project=api`
 - Run tests in headed mode (visible browser): `npx playwright test --headed`
@@ -19,12 +20,14 @@ CI (`.github/workflows/playwright.yml`) runs `typecheck` and `lint` before `npx 
 
 ## Architecture
 
-- `playwright.config.ts` — central Playwright configuration. Tests run against three browser projects (chromium, firefox, webkit) in parallel, plus an `api` project (no browser device, `baseURL: 'https://gorest.co.in'`) for REST API tests; browser projects ignore `**/api/**`, the `api` project matches only it. `baseURL` and `webServer` for the UI projects are commented out, so UI tests currently navigate to absolute URLs directly rather than a local app.
-- `tests/` — test specs (`testDir: './tests'`), named `*.spec.ts`. UI test files call only Page Object methods; they never query `page` locators directly (enforced by ESLint, see Rules). `tests/api/` holds REST API specs, which call only `src/api/` orchestrator methods (e.g. `GoRestUser`) — never Playwright's `request` fixture directly.
-- `pages/` — Page Object classes, named `*.page.ts`. `pages/base.page.ts` exports `BasePage`, which feature page classes extend. `pages/playwright-home.page.ts` (`PlaywrightHomePage`) is the reference implementation the example test uses.
+- `playwright.config.ts` — central Playwright configuration. Tests run against three browser projects (chromium, firefox, webkit), each `testMatch: '**/ui/**'`, plus an `api` project (no browser device, `baseURL: 'https://gorest.co.in'`, `testMatch: '**/api/**'`) for REST API tests. `baseURL` and `webServer` for the UI projects are commented out, so UI tests currently navigate to absolute URLs directly rather than a local app.
+- `tests/` — test specs (`testDir: './tests'`), named `*.spec.ts`, split by test type:
+  - `tests/ui/` — browser tests. Files call only Page Object methods from `pages/`; they never query `page` locators directly (enforced by ESLint, see Rules).
+  - `tests/api/` — REST API specs. Files call only `src/api/` orchestrator methods (e.g. `GoRestUser`) — never Playwright's `request` fixture directly.
+- `pages/` — Page Object classes for UI tests, named `*.page.ts`. `pages/base.page.ts` exports `BasePage`, which feature page classes extend. `pages/playwright-home.page.ts` (`PlaywrightHomePage`) is a reference implementation; `pages/bear-store-home.page.ts` (`BearStoreHomePage`) backs `tests/ui/search.spec.ts`.
 - `src/types/` — DTOs/interfaces for external APIs, e.g. `src/types/gorest.ts` (GoRest `User`, `Post`, `Comment`, `Todo` and their create/update payload variants).
 - `src/api/` — API client layer for the `api` Playwright project. `gorest-client.ts` (`GoRestClient`) wraps Playwright's `APIRequestContext` with the GoRest base path, bearer auth (`GOREST_TOKEN` env var), and response parsing. `gorest-user.ts` (`GoRestUser`) orchestrates `/users` CRUD calls on top of it; tests instantiate `GoRestUser` and call its methods, mirroring the Page Object pattern used for UI. Set `GOREST_TOKEN` (a personal GoRest API access token — never commit it) before running write operations (create/update/delete); reads work without it but are rate-limited more aggressively.
-- `eslint.config.js` — ESLint flat config. Enforces `@typescript-eslint/no-explicit-any`, bans absolute XPath locators, and bans direct `page.locator`/`page.getBy*` calls inside `tests/**/*.ts` via `no-restricted-syntax`.
+- `eslint.config.js` — ESLint flat config. Enforces `@typescript-eslint/no-explicit-any`, bans absolute XPath locators everywhere, and bans direct `page.locator`/`page.getBy*` calls inside `tests/ui/**/*.ts` via `no-restricted-syntax` (not applied to `tests/api/**/*.ts`, which has no `page` fixture to misuse).
 - `tsconfig.json` — `strict: true` plus `noUncheckedIndexedAccess` and `noImplicitOverride`; `include` covers `tests/`, `pages/`, and `src/`.
 - `.github/workflows/playwright.yml` — CI runs `typecheck`, `lint`, then `npx playwright test` on push/PR to `main`/`master`, and uploads the HTML report as a build artifact.
 - `.mcp.json` — configures three MCP servers available in this environment: `github` (GitHub Copilot MCP, for repo/PR/issue operations), `playwright` (browser automation, separate from the `@playwright/test` dependency used for the test suite itself), and `context7` (live library documentation lookup).

@@ -25,9 +25,12 @@ export class GoRestClient {
   }
 
   async get<T>(path: string, params?: QueryParams): Promise<ApiResult<T>> {
-    const response = await this.request.get(`${API_BASE_PATH}${path}${this.toQueryString(params)}`, {
-      headers: this.authHeaders(),
-    });
+    const response = await this.request.get(
+      `${API_BASE_PATH}${path}${this.toQueryString(params)}`,
+      {
+        headers: this.authHeaders(),
+      },
+    );
     return this.toResult<T>(response);
   }
 

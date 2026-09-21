@@ -24,24 +24,24 @@ export default defineConfig({
     video: 'on',
   },
 
-  /* Configure projects for major browsers and API testing */
+  /* Configure projects for major browsers (UI) and API testing */
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      testIgnore: '**/api/**',
+      testMatch: '**/ui/**',
     },
 
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
-      testIgnore: '**/api/**',
+      testMatch: '**/ui/**',
     },
 
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-      testIgnore: '**/api/**',
+      testMatch: '**/ui/**',
     },
 
     {
