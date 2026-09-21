@@ -7,3 +7,6 @@ node_modules/
 /playwright/.cache/
 /playwright/.auth/
 /.playwright-mcp/
+
+# Environment variables (secrets)
+.env
