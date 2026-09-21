@@ -44,9 +44,8 @@ is configured in this repo's `.mcp.json`).
   pass differently than a local run.
 - Confirm whether the fix might touch a test that mutates real state (GoRest
   create/update/delete) before rerunning it repeatedly.
-- Never print or persist the value of `secrets.GOREST_TOKEN` (or
-  `vars.BEARSTORE_USERNAME`/`PASSWORD`) even if it leaks into a log line —
-  redact it in any report back to the user.
+- Never print or persist the value of `secrets.GOREST_TOKEN` even if it leaks
+  into a log line — redact it in any report back to the user.
 
 ## Entry Point A: local reproduction
 
