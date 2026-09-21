@@ -13,5 +13,5 @@
     "resolveJsonModule": true,
     "noEmit": true
   },
-  "include": ["tests/**/*.ts", "pages/**/*.ts", "playwright.config.ts", "eslint.config.js"]
+  "include": ["tests/**/*.ts", "pages/**/*.ts", "src/**/*.ts", "playwright.config.ts", "eslint.config.js"]
 }

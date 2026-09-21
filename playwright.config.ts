@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import 'dotenv/config';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -17,25 +18,36 @@ export default defineConfig({
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    /* Collect trace for every test. See https://playwright.dev/docs/trace-viewer */
+    trace: 'on',
+    /* Record video for every test. See https://playwright.dev/docs/test-configuration#recording-options */
+    video: 'on',
   },
 
-  /* Configure projects for major browsers */
+  /* Configure projects for major browsers and API testing */
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      testIgnore: '**/api/**',
     },
 
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
+      testIgnore: '**/api/**',
     },
 
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
+      testIgnore: '**/api/**',
+    },
+
+    {
+      name: 'api',
+      use: { baseURL: 'https://gorest.co.in' },
+      testMatch: '**/api/**',
     },
   ],
 });
