@@ -8,6 +8,7 @@ function parsePrice(text: string): number {
 export class CartPage extends BasePage {
   private readonly itemRows: Locator;
   private readonly totalValue: Locator;
+  private readonly checkoutButton: Locator;
 
   constructor(page: Page) {
     super(page);
@@ -15,10 +16,18 @@ export class CartPage extends BasePage {
     // .cart-body to only match actual line items.
     this.itemRows = page.locator('.cart-body .cart-row');
     this.totalValue = page.locator('.cart-summary-total .cart-summary-value');
+    this.checkoutButton = page.getByRole('button', { name: 'Checkout' });
   }
 
   async open(): Promise<void> {
     await this.goto('https://bearstore-testsite.smartbear.com/cart');
+  }
+
+  async checkout(): Promise<void> {
+    await Promise.all([
+      this.page.waitForURL(/\/checkout\/billingaddress/, { waitUntil: 'load' }),
+      this.checkoutButton.click(),
+    ]);
   }
 
   async removeAllItems(): Promise<void> {

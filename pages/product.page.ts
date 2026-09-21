@@ -11,11 +11,24 @@ interface LoadableImage {
 export class ProductPage extends BasePage {
   private readonly addToCartLink: Locator;
   private readonly productImage: Locator;
+  private readonly variantGroups: Locator;
 
   constructor(page: Page) {
     super(page);
     this.addToCartLink = page.getByRole('link', { name: 'Add to cart' });
     this.productImage = page.getByRole('img', { name: /^Picture of/ }).first();
+    // Each variant attribute (Color, Leather color, ...) renders as a
+    // .form-group.choice containing its label and a list of swatch options;
+    // scoping by that group is required since option titles like "White" and
+    // "Blue" repeat across different attributes on the same product page.
+    this.variantGroups = page.locator('.form-group.choice');
+  }
+
+  async selectVariant(attributeLabel: string, optionTitle: string): Promise<void> {
+    const group = this.variantGroups.filter({
+      has: this.page.getByText(attributeLabel, { exact: true }),
+    });
+    await group.getByTitle(optionTitle, { exact: true }).click();
   }
 
   async addToCart(): Promise<void> {
