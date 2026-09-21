@@ -72,10 +72,10 @@ For every new or changed function, method, or test:
   error thrown")?
 - Are locators, variable names, and helper names self-explanatory, or do
   they require reading the app/API to decode?
-- Would a teammate understand *why* a line exists without asking? If not,
+- Would a teammate understand _why_ a line exists without asking? If not,
   the fix is usually a clearer name or restructure — a comment explaining
-  the *why* is the exception, reserved for a genuinely non-obvious
-  constraint (an API quirk, a timing issue), never a restatement of *what*
+  the _why_ is the exception, reserved for a genuinely non-obvious
+  constraint (an API quirk, a timing issue), never a restatement of _what_
   the code does.
 - Flag vague, generic names (`data`, `result`, `temp`, `helper`, `util`,
   `thing`) that hide what a value actually represents.
