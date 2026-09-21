@@ -16,6 +16,7 @@
   "include": [
     "tests/**/*.ts",
     "pages/**/*.ts",
+    "fixtures/**/*.ts",
     "src/**/*.ts",
     "playwright.config.ts",
     "eslint.config.js"

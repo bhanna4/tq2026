@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 import 'dotenv/config';
+import { AUTH_STORAGE_STATE_PATH } from './fixtures/auth-storage';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -27,21 +28,29 @@ export default defineConfig({
   /* Configure projects for major browsers (UI) and API testing */
   projects: [
     {
+      name: 'setup',
+      testMatch: '**/setup/**',
+    },
+
+    {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'], storageState: AUTH_STORAGE_STATE_PATH },
       testMatch: '**/ui/**',
+      dependencies: ['setup'],
     },
 
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      use: { ...devices['Desktop Firefox'], storageState: AUTH_STORAGE_STATE_PATH },
       testMatch: '**/ui/**',
+      dependencies: ['setup'],
     },
 
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: { ...devices['Desktop Safari'], storageState: AUTH_STORAGE_STATE_PATH },
       testMatch: '**/ui/**',
+      dependencies: ['setup'],
     },
 
     {

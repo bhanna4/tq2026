@@ -35,3 +35,53 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+  notify-self-heal:
+    needs: test
+    if: >-
+      failure() &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Comment failing run on the PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- self-heal-notify -->';
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              marker,
+              '### CI failed on this PR',
+              `Run: ${runUrl}`,
+              '',
+              'To self-heal: in Claude Code, invoke `/fix-test` and point it at the run above ' +
+                '(Entry Point B in `.claude/skills/fix-test/SKILL.md`). It will pull the failing ' +
+                "job's log and the uploaded `playwright-report` artifact, diagnose the cause, and " +
+                'propose a fix for your review before anything is pushed.',
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+            });
+            const existing = comments.find((c) => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body,
+              });
+            }
