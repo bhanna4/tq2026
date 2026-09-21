@@ -10,8 +10,8 @@ import type { CreateUserPayload, UpdateUserPayload, User } from '../types/gorest
 export class GoRestUser {
   private readonly client: GoRestClient;
 
-  constructor(request: APIRequestContext) {
-    this.client = new GoRestClient(request);
+  constructor(request: APIRequestContext, token?: string) {
+    this.client = new GoRestClient(request, token);
   }
 
   async list(params?: QueryParams): Promise<ApiResult<User[]>> {
