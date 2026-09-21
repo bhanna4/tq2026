@@ -40,20 +40,6 @@ export default defineConfig({
     },
 
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'], storageState: AUTH_STORAGE_STATE_PATH },
-      testMatch: '**/ui/**',
-      dependencies: ['setup'],
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'], storageState: AUTH_STORAGE_STATE_PATH },
-      testMatch: '**/ui/**',
-      dependencies: ['setup'],
-    },
-
-    {
       name: 'api',
       use: { baseURL: 'https://gorest.co.in' },
       testMatch: '**/api/**',

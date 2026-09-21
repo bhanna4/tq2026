@@ -99,16 +99,26 @@ projects)` (see `.github/workflows/playwright.yml`).
      inspect its contents (or `npx playwright show-report <scratch-dir>`
      locally) for the same trace/video/screenshot evidence a local run would
      produce.
-4. Map the failing step to a category:
-   - `Typecheck` / `Lint` / `Format check` failing but a local
-     `npm run typecheck`/`lint`/`format:check` passes → the branch pushed to
-     CI differs from the local working tree (uncommitted change, stale
-     branch); reconcile before treating it as a code defect.
-   - `Run Playwright tests` failing → classify exactly as in Entry Point A
-     step 2, using the downloaded report/trace instead of a local one.
-   - A failure isolated to one browser project (`firefox`/`webkit` only) →
-     check for a CI-only environment difference (headless rendering, fonts)
-     before assuming the same fix applies to `chromium`.
+4. Map the failing step to a category. Note that the `test` job in
+   `.github/workflows/playwright.yml` already auto-fixes what it safely can
+   before you're ever notified — it runs `eslint --fix` and `prettier --write`
+   and pushes the result back to the PR branch when that clears lint/format,
+   and it retries a failing `npx playwright test` up to twice more with
+   `--last-failed` to absorb flakiness. If `notify-self-heal` fired at all,
+   those mechanisms already failed to resolve it, so treat the failure as
+   real, not as something a formatter or a retry would have caught:
+   - `Typecheck` failing → this step has no auto-fix in CI; if a local
+     `npm run typecheck` passes, the branch pushed to CI differs from the
+     local working tree (uncommitted change, stale branch) — reconcile before
+     treating it as a code defect.
+   - `Lint` / `Format check` failing after CI already attempted
+     `eslint --fix` / `prettier --write` → the remaining violation is
+     unfixable by tooling (e.g. `no-explicit-any`, a raw locator in a test
+     file) and needs an actual code change, not another format pass.
+   - `Run Playwright tests` failing after CI already retried with
+     `--last-failed` twice → this is a consistent failure, not flakiness;
+     classify exactly as in Entry Point A step 2, using the downloaded
+     report/trace instead of a local one.
    - A failure only under CI's `workers: 1`/`retries: 2` config that never
      reproduces locally with default settings → try
      `npx playwright test --workers=1 --retries=2 <file>` to match CI

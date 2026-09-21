@@ -19,7 +19,7 @@ export const test = base.extend<AuthFixtures, AuthWorkerFixtures>({
   workerStorageState: [
     async ({ browser }, use, workerInfo) => {
       const account = generateSeedAccount(workerInfo.workerIndex);
-      // The chromium/firefox/webkit projects default every context to the
+      // The chromium project defaults every context to the
       // shared static account's storageState; override it here so this
       // context starts as a genuine anonymous session, otherwise the
       // registration is submitted while already logged in as that account.
