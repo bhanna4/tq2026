@@ -1,0 +1,7 @@
+{
+  "enabledMcpjsonServers": [
+    "github",
+    "playwright",
+    "context7"
+  ]
+}
