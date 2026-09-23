@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { BasePage } from './base.page';
 
 function parsePrice(text: string): number {
@@ -24,21 +24,26 @@ export class CartPage extends BasePage {
   }
 
   async checkout(): Promise<void> {
-    await Promise.all([
-      this.page.waitForURL(/\/checkout\/billingaddress/, { waitUntil: 'load' }),
-      this.checkoutButton.click(),
-    ]);
+    // Racing a wait against the click is unreliable if the current page is
+    // already in the awaited load state before navigation starts (seen on
+    // Firefox for this same pattern elsewhere); click first, then wait.
+    await this.checkoutButton.click();
+    await this.page.waitForURL(/\/checkout\/billingaddress/, { waitUntil: 'domcontentloaded' });
   }
 
   async removeAllItems(): Promise<void> {
     const maxRemovals = 20;
     for (let i = 0; i < maxRemovals; i += 1) {
-      const row = this.itemRows.first();
-      if ((await row.count()) === 0) {
+      const countBefore = await this.itemRows.count();
+      if (countBefore === 0) {
         break;
       }
-      await row.getByRole('link', { name: '×' }).click();
-      await row.waitFor({ state: 'detached' });
+      // itemRows.first() is a live locator: once this removal completes, a
+      // different row becomes "first". Waiting for that row to detach would
+      // hang forever whenever another row remains to take its place, so
+      // wait for the total row count to actually decrease instead.
+      await this.itemRows.first().getByRole('link', { name: '×' }).click();
+      await expect(this.itemRows).toHaveCount(countBefore - 1);
     }
   }
 

@@ -1,6 +1,7 @@
 import { test as base } from '@playwright/test';
 import type { BrowserContext, Page } from '@playwright/test';
 import { RegisterPage } from '../pages/register.page';
+import { CartPage } from '../pages/cart.page';
 import { generateSeedAccount } from './seed-account';
 
 type StorageState = Awaited<ReturnType<BrowserContext['storageState']>>;
@@ -40,8 +41,13 @@ export const test = base.extend<AuthFixtures, AuthWorkerFixtures>({
         } catch (error) {
           // BearStore's demo backend intermittently returns a 500 when many
           // workers register concurrently; retrying a fresh registration
-          // works around that transient server fault.
+          // works around that transient server fault. A short backoff before
+          // the next attempt gives the shared backend a moment to recover
+          // instead of hammering it again immediately under the same load.
           lastError = error;
+          if (attempt < REGISTER_ATTEMPTS) {
+            await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+          }
         }
       }
       if (lastError) {
@@ -63,12 +69,30 @@ export const test = base.extend<AuthFixtures, AuthWorkerFixtures>({
     { scope: 'worker', timeout: 90_000 },
   ],
 
-  authenticatedPage: async ({ browser, workerStorageState }, use) => {
-    const context = await browser.newContext({ storageState: workerStorageState });
-    const page = await context.newPage();
-    await use(page);
-    await context.close();
-  },
+  authenticatedPage: [
+    async ({ browser, workerStorageState }, use) => {
+      const context = await browser.newContext({ storageState: workerStorageState });
+      const page = await context.newPage();
+      await use(page);
+
+      // The worker's account (and its cart) is reused across every test that
+      // lands on this worker, including CI retries; without clearing it here,
+      // an item left over from a previous test would leak into the next
+      // one's cart assertions. Best-effort: a test that already left the
+      // browser in a broken state shouldn't fail cleanup and mask the real
+      // failure.
+      const cartPage = new CartPage(page);
+      await cartPage
+        .open()
+        .then(() => cartPage.removeAllItems())
+        .catch(() => undefined);
+      await context.close();
+    },
+    // A dedicated budget for this fixture's teardown, independent of the
+    // test body's own timeout (which some tests override down to as little
+    // as 30s) — cleanup shouldn't compete with the test for the same clock.
+    { timeout: 30_000 },
+  ],
 });
 
 export { expect } from '@playwright/test';

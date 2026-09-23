@@ -33,14 +33,16 @@ test.describe('GoRest Users API', () => {
 
           const { status: createStatus, body: createdUser } = await goRestUser.create(payload);
 
-          expect(createStatus).toBe(201);
-          expect(typeof createdUser.id).toBe('number');
-          expect(createdUser.name).toBe(payload.name);
-          expect(createdUser.email).toBe(payload.email);
-          expect(createdUser.gender).toBe(gender);
-          expect(createdUser.status).toBe(status);
-
-          await goRestUser.delete(createdUser.id);
+          try {
+            expect(createStatus).toBe(201);
+            expect(typeof createdUser.id).toBe('number');
+            expect(createdUser.name).toBe(payload.name);
+            expect(createdUser.email).toBe(payload.email);
+            expect(createdUser.gender).toBe(gender);
+            expect(createdUser.status).toBe(status);
+          } finally {
+            await goRestUser.delete(createdUser.id);
+          }
         });
       }
     }
@@ -52,33 +54,35 @@ test.describe('GoRest Users API', () => {
 
       const { status: createStatus, body: createdUser } = await goRestUser.create(payload);
 
-      expect(createStatus).toBe(201);
-      expect(typeof createdUser.id).toBe('number');
-      expect(createdUser.name).toBe(payload.name);
-      expect(createdUser.email).toBe(payload.email);
-      expect(createdUser.gender).toBe(payload.gender);
-      expect(createdUser.status).toBe(payload.status);
+      try {
+        expect(createStatus).toBe(201);
+        expect(typeof createdUser.id).toBe('number');
+        expect(createdUser.name).toBe(payload.name);
+        expect(createdUser.email).toBe(payload.email);
+        expect(createdUser.gender).toBe(payload.gender);
+        expect(createdUser.status).toBe(payload.status);
 
-      const { status: unauthorizedUpdateStatus, body: unauthorizedUpdateBody } =
-        await unauthorizedGoRestUser.update(createdUser.id, { status: 'inactive' });
+        const { status: unauthorizedUpdateStatus, body: unauthorizedUpdateBody } =
+          await unauthorizedGoRestUser.update(createdUser.id, { status: 'inactive' });
 
-      expect(unauthorizedUpdateStatus).toBe(401);
-      expect(unauthorizedUpdateBody).toEqual(
-        expect.objectContaining({ message: expect.stringContaining('Invalid token') as unknown }),
-      );
+        expect(unauthorizedUpdateStatus).toBe(401);
+        expect(unauthorizedUpdateBody).toEqual(
+          expect.objectContaining({ message: expect.stringContaining('Invalid token') as unknown }),
+        );
 
-      const { status: unauthorizedDeleteStatus } = await unauthorizedGoRestUser.delete(
-        createdUser.id,
-      );
+        const { status: unauthorizedDeleteStatus } = await unauthorizedGoRestUser.delete(
+          createdUser.id,
+        );
 
-      expect(unauthorizedDeleteStatus).toBe(401);
+        expect(unauthorizedDeleteStatus).toBe(401);
 
-      const { status: getStatus, body: fetchedUser } = await goRestUser.get(createdUser.id);
+        const { status: getStatus, body: fetchedUser } = await goRestUser.get(createdUser.id);
 
-      expect(getStatus).toBe(200);
-      expect(fetchedUser.status).toBe(payload.status);
-
-      await goRestUser.delete(createdUser.id);
+        expect(getStatus).toBe(200);
+        expect(fetchedUser.status).toBe(payload.status);
+      } finally {
+        await goRestUser.delete(createdUser.id);
+      }
     });
   });
 
@@ -90,14 +94,30 @@ test.describe('GoRest Users API', () => {
     expect(status).toBe(200);
     expect(users.length).toBeGreaterThan(0);
 
-    for (const user of users) {
-      expect(typeof user.id).toBe('number');
-      expect(typeof user.email).toBe('string');
-      expect(user.email).toMatch(EMAIL_FORMAT);
-      expect(typeof user.name).toBe('string');
-      expect(user.name.length).toBeGreaterThan(0);
-      expect(['male', 'female']).toContain(user.gender);
-      expect(['active', 'inactive']).toContain(user.status);
-    }
+    // This page is shared, public GoRest data this suite doesn't own, but
+    // GoRest's own /users POST validates email format and the gender/status
+    // enums at write time, so every record here should already conform.
+    // Collecting every violation (rather than failing on the first) gives a
+    // full, actionable diagnostic if that assumption is ever wrong, instead
+    // of hiding which record and which field actually broke the contract.
+    const violations = users.flatMap((user) => {
+      const problems: string[] = [];
+      if (typeof user.id !== 'number') problems.push('id is not a number');
+      if (typeof user.email !== 'string' || !EMAIL_FORMAT.test(user.email)) {
+        problems.push(`email "${user.email}" is not a valid email`);
+      }
+      if (typeof user.name !== 'string' || user.name.length === 0) {
+        problems.push('name is empty or not a string');
+      }
+      if (!['male', 'female'].includes(user.gender)) {
+        problems.push(`gender "${user.gender}" is not "male" or "female"`);
+      }
+      if (!['active', 'inactive'].includes(user.status)) {
+        problems.push(`status "${user.status}" is not "active" or "inactive"`);
+      }
+      return problems.map((problem) => `user ${user.id}: ${problem}`);
+    });
+
+    expect(violations).toEqual([]);
   });
 });
