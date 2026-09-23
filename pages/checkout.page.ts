@@ -53,11 +53,26 @@ export class CheckoutPage extends BasePage {
     }
     await this.cityInput.fill(address.city);
     await this.zipCodeInput.fill(address.zipCode);
-    await this.countrySelect.selectOption({ label: address.country });
+    await this.selectCountry(address.country);
     if (address.phoneNumber) {
       await this.phoneNumberInput.fill(address.phoneNumber);
     }
     await this.nextButton.click();
+  }
+
+  // The country field is a native <select> until the page's Select2 script
+  // enhances it into a combobox span (seen intermittently on the live site);
+  // selectOption() only works against the native element, so detect which
+  // form is present and drive the Select2 dropdown directly otherwise.
+  private async selectCountry(country: string): Promise<void> {
+    const tagName = await this.countrySelect.evaluate((element) => element.tagName);
+    if (tagName === 'SELECT') {
+      await this.countrySelect.selectOption({ label: country });
+      return;
+    }
+
+    await this.countrySelect.click();
+    await this.page.getByRole('option', { name: country, exact: true }).click();
   }
 
   async useBillingAddressForShipping(): Promise<void> {
