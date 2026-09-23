@@ -36,7 +36,7 @@ is configured in this repo's `.mcp.json`).
 ## Preconditions
 
 - Read `CLAUDE.md`'s Rules section before patching — a fix that reintroduces a
-  rule violation (raw locators in a test, `any`) will pass the
+  rule violation (raw locators in a test, `any`, absolute XPath) will pass the
   test but fail CI.
 - When the failure is CI-only, pull the real run evidence (Entry Point B)
   before assuming it reproduces locally — CI runs on `ubuntu-latest` with
