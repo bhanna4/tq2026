@@ -101,11 +101,11 @@ projects)` (see `.github/workflows/playwright.yml`).
 4. Map the failing step to a category. Note that the `test` job in
    `.github/workflows/playwright.yml` already auto-fixes what it safely can
    before you're ever notified — it runs `eslint --fix` and `prettier --write`
-   and pushes the result back to the PR branch when that clears lint/format,
-   and it retries a failing `npx playwright test` up to twice more with
-   `--last-failed` to absorb flakiness. If `notify-self-heal` fired at all,
-   those mechanisms already failed to resolve it, so treat the failure as
-   real, not as something a formatter or a retry would have caught:
+   and pushes the result back to the PR branch when that clears lint/format.
+   `npx playwright test` itself runs once, with no workflow-level re-run on
+   failure. If `notify-self-heal` fired at all, the lint/format auto-fix
+   already failed to resolve it, so treat the failure as real, not as
+   something a formatter would have caught:
    - `Typecheck` failing → this step has no auto-fix in CI; if a local
      `npm run typecheck` passes, the branch pushed to CI differs from the
      local working tree (uncommitted change, stale branch) — reconcile before
@@ -114,10 +114,11 @@ projects)` (see `.github/workflows/playwright.yml`).
      `eslint --fix` / `prettier --write` → the remaining violation is
      unfixable by tooling (e.g. `no-explicit-any`, a raw locator in a test
      file) and needs an actual code change, not another format pass.
-   - `Run Playwright tests` failing after CI already retried with
-     `--last-failed` twice → this is a consistent failure, not flakiness;
-     classify exactly as in Entry Point A step 2, using the downloaded
-     report/trace instead of a local one.
+   - `Run Playwright tests` failing → classify exactly as in Entry Point A
+     step 2, using the downloaded report/trace instead of a local one. Since
+     `playwright.config.ts`'s own per-test `retries: 2` (CI only) already ran
+     within that single invocation, a failure here has already survived those
+     in-process retries and is not incidental flakiness.
    - A failure only under CI's `workers: 1`/`retries: 2` config that never
      reproduces locally with default settings → try
      `npx playwright test --workers=1 --retries=2 <file>` to match CI
