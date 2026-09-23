@@ -10,3 +10,6 @@ node_modules/
 
 # Environment variables (secrets)
 .env
+
+# Local Claude Code settings (machine-specific)
+.claude/settings.local.json
