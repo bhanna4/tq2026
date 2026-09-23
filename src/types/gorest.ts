@@ -25,8 +25,6 @@ export interface Post {
 
 export type CreatePostPayload = Omit<Post, 'id'>;
 
-export type UpdatePostPayload = Partial<CreatePostPayload>;
-
 export interface Comment {
   id: number;
   post_id: number;
@@ -36,22 +34,6 @@ export interface Comment {
 }
 
 export type CreateCommentPayload = Omit<Comment, 'id'>;
-
-export type UpdateCommentPayload = Partial<CreateCommentPayload>;
-
-export type TodoStatus = 'pending' | 'completed';
-
-export interface Todo {
-  id: number;
-  user_id: number;
-  title: string;
-  due_on: string;
-  status: TodoStatus;
-}
-
-export type CreateTodoPayload = Omit<Todo, 'id'>;
-
-export type UpdateTodoPayload = Partial<CreateTodoPayload>;
 
 export interface GoRestErrorDetail {
   field: string;

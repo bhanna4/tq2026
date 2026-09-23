@@ -42,7 +42,15 @@ jobs:
             git commit -m "chore: auto-fix lint/format issues"
             git push origin "HEAD:${{ github.head_ref }}"
           fi
+      - name: Cache Playwright browser binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - name: Install Playwright Browsers
+        # playwright install is idempotent: with the cache above restored, it
+        # skips re-downloading any browser version already present and only
+        # installs OS-level deps (fast) instead of ~3 browser downloads.
         run: npx playwright install --with-deps
       - name: Run Playwright tests
         run: npx playwright test
