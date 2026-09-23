@@ -50,8 +50,7 @@ anything subjective:
       `src/api/*` orchestrator methods (e.g. `GoRestUser`).
 - [ ] Locator priority followed, in order: `getByRole` > `getByLabel` >
       `getByText` > `getByTestId` > `getByTitle`/`getByAltText` > a relative
-      CSS selector scoped to a parent. No absolute XPath, ever. Relative
-      XPath only as a last resort, with a comment explaining why.
+      CSS selector scoped to a parent.
 - [ ] New Page Object: extends `BasePage`, named `<Feature>Page` in
       `<feature>.page.ts`, locators are `readonly`/`private readonly`
       class properties set in the constructor — never re-queried inline in a

@@ -46,8 +46,7 @@ in this workspace target a different, unconfigured system).
      constructor — never re-queried inline in a method.
    - Locator priority, in order: `getByRole` > `getByLabel` > `getByText` >
      `getByTestId` > `getByTitle`/`getByAltText` > a relative CSS selector
-     scoped to a parent. No absolute XPath ever; relative XPath only as a
-     last resort with a comment explaining why.
+     scoped to a parent.
    - Expose action/assertion methods (e.g. `addToCart()`, `expectTotal(value)`)
      — never expose raw locators to callers.
 3. If the flow needs authentication, rely on the project-wide `storageState`
@@ -90,8 +89,6 @@ in this workspace target a different, unconfigured system).
 
 - Do not call `page.locator`/`page.getBy*` or the `request` fixture directly
   inside a test file — encapsulate in a Page Object or API orchestrator.
-- Do not use absolute XPath; avoid relative XPath unless nothing else works,
-  and comment why when you do.
 - Do not add `any`, implicit `any`, or untyped fixtures/params.
 - Do not commit a real `GOREST_TOKEN` or other credential into a spec, fixture,
   or committed `.env`.
