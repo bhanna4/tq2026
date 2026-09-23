@@ -33,6 +33,18 @@ export default defineConfig({
     },
 
     {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+      testMatch: '**/ui/**',
+    },
+
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+      testMatch: '**/ui/**',
+    },
+
+    {
       name: 'api',
       use: { baseURL: 'https://gorest.co.in' },
       testMatch: '**/api/**',

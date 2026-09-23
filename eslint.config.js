@@ -3,6 +3,12 @@ const tseslint = require('typescript-eslint');
 const playwright = require('eslint-plugin-playwright');
 const prettier = require('eslint-config-prettier');
 
+const NO_ABSOLUTE_XPATH = {
+  selector: "CallExpression[callee.property.name='locator'] Literal[value=/^\\/\\//]",
+  message:
+    'Absolute XPath locators are not permitted. Use a Playwright locator (getByRole, getByLabel, getByText, getByTestId, ...) or a relative/scoped CSS selector instead.',
+};
+
 const NO_RAW_LOCATORS_IN_TESTS = {
   selector:
     "CallExpression[callee.object.name='page'][callee.property.name=/^(locator|getByRole|getByLabel|getByText|getByTestId|getByTitle|getByAltText|getByPlaceholder)$/]",
@@ -22,12 +28,20 @@ module.exports = tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/explicit-member-accessibility': ['error', { accessibility: 'no-public' }],
+      'no-restricted-syntax': ['error', NO_ABSOLUTE_XPATH],
     },
   },
   {
     files: ['tests/ui/**/*.ts'],
     rules: {
-      'no-restricted-syntax': ['error', NO_RAW_LOCATORS_IN_TESTS],
+      'no-restricted-syntax': ['error', NO_ABSOLUTE_XPATH, NO_RAW_LOCATORS_IN_TESTS],
+    },
+  },
+  {
+    files: ['pages/**/*.ts'],
+    rules: {
+      // Page objects are the only place allowed to query `page` directly.
+      'no-restricted-syntax': ['error', NO_ABSOLUTE_XPATH],
     },
   },
   {

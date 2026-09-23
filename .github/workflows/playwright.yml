@@ -44,9 +44,8 @@ jobs:
           fi
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
-      - name: Run Playwright tests (retry failed tests only if the full run fails; not a code fix)
-        run: |
-          npx playwright test || npx playwright test --last-failed || npx playwright test --last-failed
+      - name: Run Playwright tests
+        run: npx playwright test
         env:
           GOREST_TOKEN: ${{ secrets.GOREST_TOKEN }}
       - uses: actions/upload-artifact@v4
