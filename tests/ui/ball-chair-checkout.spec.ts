@@ -11,8 +11,10 @@ test('adds a Ball Chair in white and blue and completes checkout', async ({
 }) => {
   // This flow walks five real checkout steps against the live site (search,
   // product, cart, multi-page checkout); the default 30s test timeout doesn't
-  // leave enough room for that many page loads.
-  test.setTimeout(90_000);
+  // leave enough room for that many page loads. Firefox in particular has
+  // been observed taking 70-80s for a successful run, so 90s left too little
+  // margin and intermittently hit the ceiling mid-step.
+  test.setTimeout(150_000);
 
   const homePage = new BearStoreHomePage(authenticatedPage);
   const productPage = new ProductPage(authenticatedPage);
@@ -44,5 +46,8 @@ test('adds a Ball Chair in white and blue and completes checkout', async ({
   await checkoutPage.continueWithSelectedPaymentMethod();
   await checkoutPage.acceptTermsAndConfirmOrder();
 
-  await expect(checkoutPage.orderReceivedHeadingLocator()).toBeVisible();
+  // Order confirmation involves several server-side steps (shipping, payment,
+  // confirm) on the live site; the default 5s expect timeout has been too
+  // tight for this specific assertion under slower browsers/load.
+  await expect(checkoutPage.orderReceivedHeadingLocator()).toBeVisible({ timeout: 15_000 });
 });

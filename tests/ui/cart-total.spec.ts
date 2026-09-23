@@ -26,6 +26,10 @@ test('Adding a single item shows it in the cart', async ({ authenticatedPage }) 
 });
 
 test('Adding two items shows the combined total in the cart', async ({ authenticatedPage }) => {
+  // Two full search-open-addToCart round trips plus a cart load leave little
+  // margin under the default 30s test timeout, especially on slower browsers.
+  test.setTimeout(60_000);
+
   const homePage = new BearStoreHomePage(authenticatedPage);
   const productPage = new ProductPage(authenticatedPage);
   const cartPage = new CartPage(authenticatedPage);
