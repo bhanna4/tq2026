@@ -63,7 +63,10 @@ export class CheckoutPage extends BasePage {
   // The country field is a native <select> until the page's Select2 script
   // enhances it into a combobox span (seen intermittently on the live site);
   // selectOption() only works against the native element, so detect which
-  // form is present and drive the Select2 dropdown directly otherwise.
+  // form is present and drive the Select2 dropdown directly otherwise. Its
+  // opened dropdown exposes each country as a `treeitem` (confirmed via a
+  // Playwright accessibility snapshot), not the `option` role a standard
+  // listbox would use.
   private async selectCountry(country: string): Promise<void> {
     const tagName = await this.countrySelect.evaluate((element) => element.tagName);
     if (tagName === 'SELECT') {
@@ -72,7 +75,7 @@ export class CheckoutPage extends BasePage {
     }
 
     await this.countrySelect.click();
-    await this.page.getByRole('option', { name: country, exact: true }).click();
+    await this.page.getByRole('treeitem', { name: country, exact: true }).click();
   }
 
   async useBillingAddressForShipping(): Promise<void> {
