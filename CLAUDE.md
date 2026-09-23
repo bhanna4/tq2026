@@ -7,7 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Run all tests: `npx playwright test`
 - Run a single test file: `npx playwright test tests/ui/search.spec.ts`
 - Run a single test by name: `npx playwright test -g "has title"`
-- Run only the UI tests: `npx playwright test --project=chromium`
+- Run only the UI tests: `npx playwright test --project=chromium --project=firefox --project=webkit`
+- Run only one UI browser: `npx playwright test --project=chromium`
 - Run only the API tests: `npx playwright test --project=api`
 - Run tests in headed mode (visible browser): `npx playwright test --headed`
 - View the HTML test report after a run: `npx playwright show-report`
@@ -19,7 +20,7 @@ CI (`.github/workflows/playwright.yml`) runs `typecheck` and `lint` before `npx 
 
 ## Architecture
 
-- `playwright.config.ts` — central Playwright configuration. Tests run against a single `chromium` browser project, `testMatch: '**/ui/**'`, plus an `api` project (no browser device, `baseURL: 'https://gorest.co.in'`, `testMatch: '**/api/**'`) for REST API tests. `baseURL` and `webServer` for the UI project are commented out, so UI tests currently navigate to absolute URLs directly rather than a local app. There is no global pre-authenticated storage state; tests that need a logged-in session opt into `fixtures/auth.fixture.ts`'s `authenticatedPage` fixture instead, described below.
+- `playwright.config.ts` — central Playwright configuration. UI tests (`testMatch: '**/ui/**'`) run against three browser projects — `chromium` (`devices['Desktop Chrome']`), `firefox` (`devices['Desktop Firefox']`), and `webkit` (`devices['Desktop Safari']`) — plus an `api` project (no browser device, `baseURL: 'https://gorest.co.in'`, `testMatch: '**/api/**'`) for REST API tests. `baseURL` and `webServer` for the UI project are commented out, so UI tests currently navigate to absolute URLs directly rather than a local app. There is no global pre-authenticated storage state; tests that need a logged-in session opt into `fixtures/auth.fixture.ts`'s `authenticatedPage` fixture instead, described below.
 - `tests/` — test specs (`testDir: './tests'`), named `*.spec.ts`, split by test type:
   - `tests/ui/` — browser tests. Files call only Page Object methods from `pages/`; they never query `page` locators directly (enforced by ESLint, see Rules).
   - `tests/api/` — REST API specs. Files call only `src/api/` orchestrator methods (e.g. `GoRestUser`) — never Playwright's `request` fixture directly.
