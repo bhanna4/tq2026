@@ -5,9 +5,13 @@ on:
   pull_request:
     branches: [main]
 jobs:
-  test:
-    timeout-minutes: 60
+  lint:
+    timeout-minutes: 15
     runs-on: ubuntu-latest
+    # contents: write is only needed for this job's auto-fix push-back, so it
+    # is scoped here rather than on the (much longer-running, dependency-
+    # installing, test-executing) job below - narrowing the window a
+    # compromised dependency could exploit that permission.
     permissions:
       contents: write
     steps:
@@ -42,6 +46,20 @@ jobs:
             git commit -m "chore: auto-fix lint/format issues"
             git push origin "HEAD:${{ github.head_ref }}"
           fi
+
+  test:
+    needs: lint
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
       - name: Cache Playwright browser binaries
         uses: actions/cache@v4
         with:
@@ -64,7 +82,7 @@ jobs:
           retention-days: 30
 
   notify-self-heal:
-    needs: test
+    needs: [lint, test]
     if: >-
       failure() &&
       github.event_name == 'pull_request' &&

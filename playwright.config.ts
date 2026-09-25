@@ -18,10 +18,14 @@ export default defineConfig({
   reporter: 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    /* Collect trace for every test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on',
-    /* Record video for every test. See https://playwright.dev/docs/test-configuration#recording-options */
-    video: 'on',
+    // 'on' previously captured a trace for every test, including passing
+    // ones - for the api project, that trace embeds the literal
+    // Authorization: Bearer <GOREST_TOKEN> header from every request, and
+    // CI uploads playwright-report/ (which includes traces) as a 30-day
+    // build artifact. retain-on-failure keeps debugging value for the case
+    // that matters while eliminating that exposure for passing runs.
+    trace: 'retain-on-failure',
+    video: 'retain-on-failure',
   },
 
   /* Configure projects for major browsers (UI) and API testing */
