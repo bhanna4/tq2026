@@ -47,6 +47,26 @@ export class CartPage extends BasePage {
     }
   }
 
+  async removeItem(productName: string): Promise<void> {
+    const countBefore = await this.itemRows.count();
+    await this.rowLocator(productName).getByRole('link', { name: '×' }).click();
+    await expect(this.itemRows).toHaveCount(countBefore - 1);
+  }
+
+  async increaseQuantity(productName: string): Promise<void> {
+    // The +/- controls are icon-only with no accessible name or label, so a
+    // scoped CSS locator is the only option (locator priority: last resort).
+    // Clicking "+" fires an immediate AJAX request that updates the row's
+    // quantity/subtotal; wait for that response so the row reflects the new
+    // state before the caller reads it.
+    await Promise.all([
+      this.page.waitForResponse(
+        (response) => response.url().includes('/shoppingcart/updatecartitem') && response.ok(),
+      ),
+      this.rowLocator(productName).locator('.bootstrap-touchspin-up').click(),
+    ]);
+  }
+
   private rowLocator(productName: string): Locator {
     return this.itemRows.filter({
       has: this.page.getByRole('link', { name: productName, exact: true }),

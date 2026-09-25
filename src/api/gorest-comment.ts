@@ -1,6 +1,6 @@
 import type { APIRequestContext } from '@playwright/test';
 import { GoRestClient, type ApiResult } from './gorest-client';
-import type { CreateCommentPayload, Comment } from '../types/gorest';
+import type { CreateCommentPayload, Comment, UpdateCommentPayload } from '../types/gorest';
 
 /**
  * Orchestrates GoRest `/comments` and `/posts/{id}/comments` API calls for
@@ -27,5 +27,13 @@ export class GoRestComment {
     payload: Omit<CreateCommentPayload, 'post_id'>,
   ): Promise<ApiResult<Comment>> {
     return this.client.post<Comment>(`/posts/${postId}/comments`, payload);
+  }
+
+  async update(id: number, payload: UpdateCommentPayload): Promise<ApiResult<Comment>> {
+    return this.client.put<Comment>(`/comments/${id}`, payload);
+  }
+
+  async delete(id: number): Promise<ApiResult<undefined>> {
+    return this.client.delete<undefined>(`/comments/${id}`);
   }
 }

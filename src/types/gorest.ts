@@ -25,6 +25,8 @@ export interface Post {
 
 export type CreatePostPayload = Omit<Post, 'id'>;
 
+export type UpdatePostPayload = Partial<CreatePostPayload>;
+
 export interface Comment {
   id: number;
   post_id: number;
@@ -35,6 +37,8 @@ export interface Comment {
 
 export type CreateCommentPayload = Omit<Comment, 'id'>;
 
+export type UpdateCommentPayload = Partial<CreateCommentPayload>;
+
 export interface GoRestErrorDetail {
   field: string;
   message: string;
@@ -42,11 +46,11 @@ export interface GoRestErrorDetail {
 
 export type GoRestErrorResponse = GoRestErrorDetail[];
 
-export interface GoRestMeta {
-  pagination: {
-    total: number;
-    pages: number;
-    page: number;
-    limit: number;
-  };
+// GoRest returns pagination info as response headers (x-pagination-*), not a
+// body wrapper - this shape mirrors those headers.
+export interface GoRestPagination {
+  total: number;
+  pages: number;
+  page: number;
+  limit: number;
 }

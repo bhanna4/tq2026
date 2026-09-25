@@ -78,6 +78,31 @@ export class CheckoutPage extends BasePage {
     await this.page.getByRole('treeitem', { name: country, exact: true }).click();
   }
 
+  // Purpose-built for the missing-required-field validation test: fills
+  // every field except First name (required) and submits, so the client-side
+  // validation summary is triggered without duplicating fillBillingAddress's
+  // full field list for one negative-path scenario.
+  async fillBillingAddressWithoutFirstName(
+    address: Omit<BillingAddress, 'firstName'>,
+  ): Promise<void> {
+    await this.lastNameInput.fill(address.lastName);
+    await this.address1Input.fill(address.address1);
+    if (address.address2) {
+      await this.address2Input.fill(address.address2);
+    }
+    await this.cityInput.fill(address.city);
+    await this.zipCodeInput.fill(address.zipCode);
+    await this.selectCountry(address.country);
+    if (address.phoneNumber) {
+      await this.phoneNumberInput.fill(address.phoneNumber);
+    }
+    await this.nextButton.click();
+  }
+
+  requiredFieldErrorLocator(fieldLabel: string): Locator {
+    return this.page.getByText(`'${fieldLabel}' should not be empty.`);
+  }
+
   async useBillingAddressForShipping(): Promise<void> {
     await this.shipToThisAddressButton.click();
   }

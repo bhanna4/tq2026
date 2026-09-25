@@ -1,4 +1,5 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test';
+import type { GoRestPagination } from '../types/gorest';
 
 const API_BASE_PATH = '/public/v2';
 
@@ -6,6 +7,9 @@ export interface ApiResult<T> {
   status: number;
   ok: boolean;
   body: T;
+  // Only present on responses that carry GoRest's x-pagination-* headers
+  // (list endpoints); absent on get-by-id/create/update/delete.
+  pagination?: GoRestPagination;
 }
 
 export type QueryParams = Record<string, string | number | boolean | undefined>;
@@ -81,6 +85,25 @@ export class GoRestClient {
   private async toResult<T>(response: APIResponse): Promise<ApiResult<T>> {
     const text = await response.text();
     const body = (text ? JSON.parse(text) : undefined) as T;
-    return { status: response.status(), ok: response.ok(), body };
+    return {
+      status: response.status(),
+      ok: response.ok(),
+      body,
+      pagination: this.toPagination(response),
+    };
+  }
+
+  private toPagination(response: APIResponse): GoRestPagination | undefined {
+    const headers = response.headers();
+    const total = headers['x-pagination-total'];
+    if (total === undefined) {
+      return undefined;
+    }
+    return {
+      total: Number(total),
+      pages: Number(headers['x-pagination-pages']),
+      page: Number(headers['x-pagination-page']),
+      limit: Number(headers['x-pagination-limit']),
+    };
   }
 }

@@ -19,14 +19,13 @@ export class BearStoreHomePage extends BasePage {
 
   async search(query: string): Promise<void> {
     await this.searchInput.fill(query);
-    // waitUntil: 'load' has hung on Firefox against this live site — some
-    // slow-completing background resource seems to prevent the load event
-    // from firing there even after the DOM is ready. domcontentloaded is
-    // enough to know the search results page is interactable.
-    await Promise.all([
-      this.page.waitForURL(/\/search\?q=/, { waitUntil: 'domcontentloaded' }),
-      this.searchInput.press('Enter'),
-    ]);
+    // Racing waitForURL against the triggering keypress is unreliable on
+    // Firefox: it has been observed to report the navigation completing
+    // ("navigated to ...") while the raced waitForURL call still hangs.
+    // press() first, then wait, matching the fix already applied to
+    // openSearchResult()/checkout() for the same underlying issue.
+    await this.searchInput.press('Enter');
+    await this.page.waitForURL(/\/search\?q=/, { waitUntil: 'domcontentloaded' });
   }
 
   noResultsMessageLocator(): Locator {

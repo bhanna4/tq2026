@@ -47,6 +47,20 @@ test.describe('GoRest Users API', () => {
       }
     }
 
+    test('rejects creating a user with an invalid email', async ({ request }) => {
+      const goRestUser = new GoRestUser(request);
+      const payload = { ...uniqueUserPayload(), email: 'not-an-email' };
+
+      const { status, body } = await goRestUser.create(payload);
+
+      expect(status).toBe(422);
+      expect(body).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ field: 'email', message: 'is invalid' }),
+        ]),
+      );
+    });
+
     test('rejects unauthorized access to a created user', async ({ request }) => {
       const goRestUser = new GoRestUser(request);
       const unauthorizedGoRestUser = new GoRestUser(request, 'invalid-token');
@@ -119,5 +133,38 @@ test.describe('GoRest Users API', () => {
     });
 
     expect(violations).toEqual([]);
+  });
+
+  test('paginates results using page and per_page params', async ({ request }) => {
+    const goRestUser = new GoRestUser(request);
+
+    const {
+      status: firstPageStatus,
+      body: firstPageUsers,
+      pagination: firstPagination,
+    } = await goRestUser.list({ page: 1, per_page: 3 });
+    const {
+      status: secondPageStatus,
+      body: secondPageUsers,
+      pagination: secondPagination,
+    } = await goRestUser.list({ page: 2, per_page: 3 });
+
+    expect(firstPageStatus).toBe(200);
+    expect(secondPageStatus).toBe(200);
+    expect(firstPageUsers).toHaveLength(3);
+    expect(secondPageUsers).toHaveLength(3);
+
+    expect(firstPagination?.limit).toBe(3);
+    expect(firstPagination?.page).toBe(1);
+    expect(secondPagination?.page).toBe(2);
+    // Both pages share the same total/pages count of the same underlying
+    // dataset, confirming per_page actually changed the page size rather
+    // than being silently ignored.
+    expect(secondPagination?.total).toBe(firstPagination?.total);
+    expect(secondPagination?.pages).toBe(firstPagination?.pages);
+
+    const firstPageIds = firstPageUsers.map((user) => user.id);
+    const secondPageIds = secondPageUsers.map((user) => user.id);
+    expect(firstPageIds.some((id) => secondPageIds.includes(id))).toBe(false);
   });
 });
