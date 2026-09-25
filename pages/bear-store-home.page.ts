@@ -19,10 +19,13 @@ export class BearStoreHomePage extends BasePage {
 
   async search(query: string): Promise<void> {
     await this.searchInput.fill(query);
-    await Promise.all([
-      this.page.waitForURL(/\/search\?q=/, { waitUntil: 'load' }),
-      this.searchInput.press('Enter'),
-    ]);
+    // Racing waitForURL against the triggering keypress is unreliable on
+    // Firefox: it has been observed to report the navigation completing
+    // ("navigated to ...") while the raced waitForURL call still hangs.
+    // press() first, then wait, matching the fix already applied to
+    // openSearchResult()/checkout() for the same underlying issue.
+    await this.searchInput.press('Enter');
+    await this.page.waitForURL(/\/search\?q=/, { waitUntil: 'domcontentloaded' });
   }
 
   noResultsMessageLocator(): Locator {
@@ -38,9 +41,13 @@ export class BearStoreHomePage extends BasePage {
   }
 
   async openSearchResult(productName: string): Promise<void> {
-    await Promise.all([
-      this.page.waitForLoadState('load'),
-      this.productResultLinkLocator(productName).click(),
-    ]);
+    // Racing a bare waitForLoadState('load') against the click is unreliable:
+    // it can resolve immediately off the still-loaded search-results page,
+    // before the click's navigation actually completes (seen on Firefox).
+    // Click first, then require the URL to actually leave /search.
+    await this.productResultLinkLocator(productName).click();
+    await this.page.waitForURL((url) => !url.pathname.startsWith('/search'), {
+      waitUntil: 'domcontentloaded',
+    });
   }
 }

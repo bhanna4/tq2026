@@ -1,6 +1,6 @@
 import type { APIRequestContext } from '@playwright/test';
 import { GoRestClient, type ApiResult } from './gorest-client';
-import type { CreatePostPayload, Post } from '../types/gorest';
+import type { CreatePostPayload, Post, UpdatePostPayload } from '../types/gorest';
 
 /**
  * Orchestrates GoRest `/posts` API calls for tests. Mirrors the Page Object
@@ -20,6 +20,10 @@ export class GoRestPost {
 
   async create(payload: CreatePostPayload): Promise<ApiResult<Post>> {
     return this.client.post<Post>('/posts', payload);
+  }
+
+  async update(id: number, payload: UpdatePostPayload): Promise<ApiResult<Post>> {
+    return this.client.put<Post>(`/posts/${id}`, payload);
   }
 
   async delete(id: number): Promise<ApiResult<undefined>> {

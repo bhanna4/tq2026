@@ -9,7 +9,7 @@
     },
     "playwright": {
       "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest"]
+      "args": ["-y", "@playwright/mcp@0.0.82"]
     },
     "context7": {
       "type": "http",

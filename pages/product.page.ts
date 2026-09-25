@@ -47,11 +47,23 @@ export class ProductPage extends BasePage {
 
     // Adding to cart fires an async request; wait for that request to
     // complete before navigating away, otherwise it can be cancelled in-flight.
-    await Promise.all([
-      this.page.waitForResponse(
-        (response) => response.url().includes('/cart/addproduct/') && response.ok(),
-      ),
-      this.addToCartLink.click(),
-    ]);
+    // An explicit timeout (rather than relying on the outer test timeout)
+    // turns a silent hang into a clear, actionable failure message.
+    try {
+      await Promise.all([
+        this.page.waitForResponse(
+          (response) => response.url().includes('/cart/addproduct/') && response.ok(),
+          { timeout: 15_000 },
+        ),
+        this.addToCartLink.click(),
+      ]);
+    } catch (error) {
+      throw new Error(
+        'Add to cart: no successful /cart/addproduct/ response observed within 15s.',
+        {
+          cause: error,
+        },
+      );
+    }
   }
 }

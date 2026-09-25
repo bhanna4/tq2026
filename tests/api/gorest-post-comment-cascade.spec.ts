@@ -27,40 +27,54 @@ test.describe('GoRest post deletion cascades to comments', () => {
     );
     expect(firstUserStatus).toBe(201);
 
-    const { status: secondUserStatus, body: secondUser } = await goRestUser.create(
-      uniqueUserPayload('Commenter'),
-    );
-    expect(secondUserStatus).toBe(201);
+    try {
+      const { status: secondUserStatus, body: secondUser } = await goRestUser.create(
+        uniqueUserPayload('Commenter'),
+      );
+      expect(secondUserStatus).toBe(201);
 
-    const { status: postStatus, body: post } = await goRestPost.create({
-      user_id: firstUser.id,
-      title: 'A post about to be deleted',
-      body: 'This post will be removed along with its comments.',
-    });
-    expect(postStatus).toBe(201);
-    expect(post.user_id).toBe(firstUser.id);
+      try {
+        const { status: postStatus, body: post } = await goRestPost.create({
+          user_id: firstUser.id,
+          title: 'A post about to be deleted',
+          body: 'This post will be removed along with its comments.',
+        });
+        expect(postStatus).toBe(201);
+        expect(post.user_id).toBe(firstUser.id);
 
-    const { status: commentStatus, body: comment } = await goRestComment.createForPost(post.id, {
-      name: secondUser.name,
-      email: secondUser.email,
-      body: 'A comment from the second user.',
-    });
-    expect(commentStatus).toBe(201);
-    expect(comment.post_id).toBe(post.id);
+        try {
+          const { status: commentStatus, body: comment } = await goRestComment.createForPost(
+            post.id,
+            {
+              name: secondUser.name,
+              email: secondUser.email,
+              body: 'A comment from the second user.',
+            },
+          );
+          expect(commentStatus).toBe(201);
+          expect(comment.post_id).toBe(post.id);
 
-    const { status: deletePostStatus } = await goRestPost.delete(post.id);
-    expect(deletePostStatus).toBe(204);
+          const { status: deletePostStatus } = await goRestPost.delete(post.id);
+          expect(deletePostStatus).toBe(204);
 
-    const { status: getCommentStatus } = await goRestComment.get(comment.id);
-    expect(getCommentStatus).toBe(404);
+          const { status: getCommentStatus } = await goRestComment.get(comment.id);
+          expect(getCommentStatus).toBe(404);
 
-    const { status: listCommentsStatus, body: postComments } = await goRestComment.listForPost(
-      post.id,
-    );
-    expect(listCommentsStatus).toBe(200);
-    expect(postComments).toEqual([]);
-
-    await goRestUser.delete(firstUser.id);
-    await goRestUser.delete(secondUser.id);
+          const { status: listCommentsStatus, body: postComments } =
+            await goRestComment.listForPost(post.id);
+          expect(listCommentsStatus).toBe(200);
+          expect(postComments).toEqual([]);
+        } finally {
+          // Best-effort: the post is normally already deleted by the
+          // assertions above; this only matters if an earlier assertion in
+          // this block failed first and left it behind.
+          await goRestPost.delete(post.id).catch(() => undefined);
+        }
+      } finally {
+        await goRestUser.delete(secondUser.id);
+      }
+    } finally {
+      await goRestUser.delete(firstUser.id);
+    }
   });
 });
